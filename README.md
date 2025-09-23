@@ -139,11 +139,36 @@ GRACE-UCS tracks and can resume from any implementation state:
 
 ## 🔧 UCS-Specific Patterns
 
+GRACE-UCS provides dedicated pattern files for each payment flow:
+
+### Available Flow Patterns
+- **📖 `guides/patterns/README.md`** - Pattern directory index and usage guide
+- **✅ `guides/patterns/pattern_authorize.md`** - Complete authorization flow patterns and implementations
+- **✅ `guides/patterns/pattern_capture.md`** - Comprehensive capture flow patterns and examples
+- **🚧 Future patterns**: void, refund, sync, webhook, dispute flows
+
+### Pattern Usage
+Each pattern file provides:
+- **🎯 Quick Start Guide** with placeholder replacement examples
+- **📊 Real-world Analysis** from existing connector implementations
+- **🏗️ Modern Macro-Based Templates** for consistent implementations
+- **🔧 Legacy Manual Patterns** for special cases
+- **🧪 Testing Strategies** and integration checklists
+- **✅ Validation Steps** and quality checks
+
+### Using Patterns with AI
+```bash
+# Use specific patterns for targeted implementation
+implement authorization flow for NewPayment using pattern_authorize.md
+add capture flow to ExistingConnector using pattern_capture.md
+implement complete connector flows using guides/patterns/ directory
+```
+
 ### Connector Structure
 ```rust
 // Main connector file: backend/connector-integration/src/connectors/connector_name.rs
 impl ConnectorIntegrationV2<Flow, Request, Response> for ConnectorName {
-    // UCS-specific implementations
+    // UCS-specific implementations using patterns from guides/patterns/
 }
 
 // Transformers: backend/connector-integration/src/connectors/connector_name/transformers.rs
@@ -164,8 +189,10 @@ grace-ucs/
 ├── README.md                            # This file
 ├── guides/
 │   ├── connector_integration_guide.md   # Step-by-step UCS integration
-│   ├── patterns/patterns.md             # UCS-specific patterns
-│   ├── errors/errors.md                 # Common UCS errors and solutions
+│   ├── patterns/                        # Flow-specific UCS patterns
+│   │   ├── README.md                    # Pattern directory index and usage guide
+│   │   ├── pattern_authorize.md         # Authorization flow patterns
+│   │   └── pattern_capture.md           # Capture flow patterns
 │   ├── learnings/learnings.md           # Lessons from UCS implementations
 │   ├── types/types.md                   # UCS type system guide
 │   └── integrations/integrations.md     # Previous UCS integrations
