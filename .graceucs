@@ -54,7 +54,7 @@ Note: AI MUST check if template files already exist before running script
 grace-ucs/
 ├── guides/
 │   ├── connector_integration_guide.md - COMPREHENSIVE UCS integration process [MUST FOLLOW]
-│   ├── patterns/patterns.md - UCS-specific implementation patterns [ESSENTIAL]
+│   ├── patterns/pattern_authorize.md - UCS-specific implementation patterns [ESSENTIAL]
 │   ├── types/types.md - Complete UCS type system guide [CRITICAL]
 │   ├── errors/errors.md - UCS error handling and debugging [ESSENTIAL]
 │   ├── learnings/learnings.md - Lessons from UCS implementations [IMPORTANT]
@@ -141,7 +141,7 @@ PLANNING PHASE:
 5. Define success criteria and testing strategy
 
 IMPLEMENTATION PHASE:
-1. Follow UCS patterns from patterns.md
+1. Follow UCS patterns from pattern_authorize.md
 2. Use types from types.md
 3. **WHEN STUCK: Study existing connector patterns, understand WHY they work that way**
 4. **FOCUS ON IMPLEMENTATION CODE ONLY** - do NOT create test files

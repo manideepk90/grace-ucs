@@ -192,6 +192,11 @@ impl TryFrom<&ConnectorAuthType> for ConnectorNameAuthType {
 
 ### Phase 3: Flow Implementation
 
+> **📖 Pattern Reference:** For detailed implementation patterns, see:
+> - **Authorization Flow**: `guides/patterns/pattern_authorize.md`
+> - **Capture Flow**: `guides/patterns/pattern_capture.md`
+> - **Future flows**: Additional pattern files will be added for void, refund, sync, webhook, and dispute flows
+
 #### Step 3.1: Authorize Flow
 ```rust
 impl ConnectorIntegrationV2<Authorize, PaymentsAuthorizeData, PaymentsResponseData>
@@ -363,8 +368,9 @@ mod tests {
 # AI Command: "add capture flow to existing [ConnectorName] connector in UCS"
 # AI will:
 # 1. Analyze existing authorize implementation
-# 2. Create capture flow following same patterns
-# 3. Ensure consistency with existing code style
+# 2. Use patterns from guides/patterns/pattern_capture.md
+# 3. Create capture flow following same patterns
+# 4. Ensure consistency with existing code style
 ```
 
 #### "Need to add wallet support"
