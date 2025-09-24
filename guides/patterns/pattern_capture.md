@@ -6,8 +6,6 @@ This document provides comprehensive, reusable patterns for implementing the cap
 
 > **🏗️ UCS-Specific:** This pattern is tailored for UCS architecture using RouterDataV2, ConnectorIntegrationV2, and domain_types. For traditional Hyperswitch patterns, refer to legacy documentation.
 
-> **📖 Related Pattern:** For authorization flow implementation, see [`pattern_authorize.md`](./pattern_authorize.md). Capture flows typically build upon existing authorization implementations.
-
 ## 🚀 Quick Start Guide
 
 To implement a new connector capture flow using these patterns:

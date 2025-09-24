@@ -195,6 +195,9 @@ impl TryFrom<&ConnectorAuthType> for ConnectorNameAuthType {
 > **📖 Pattern Reference:** For detailed implementation patterns, see:
 > - **Authorization Flow**: `guides/patterns/pattern_authorize.md`
 > - **Capture Flow**: `guides/patterns/pattern_capture.md`
+> - **Refund Flow**: `guides/patterns/pattern_refund.md`
+> - **Void Flow**: `guides/patterns/pattern_void.md`
+> - **Psync Flow**: `guides/patterns/pattern_psync.md`
 > - **Future flows**: Additional pattern files will be added for void, refund, sync, webhook, and dispute flows
 
 #### Step 3.1: Authorize Flow

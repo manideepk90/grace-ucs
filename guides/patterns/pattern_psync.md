@@ -6,8 +6,6 @@ This document provides comprehensive, reusable patterns for implementing the Psy
 
 > **🏗️ UCS-Specific:** This pattern is tailored for UCS architecture using RouterDataV2, ConnectorIntegrationV2, and domain_types. For traditional Hyperswitch patterns, refer to legacy documentation.
 
-> **📖 Related Patterns:** For authorization flow implementation, see [`pattern_authorize.md`](./pattern_authorize.md). For capture flow implementation, see [`pattern_capture.md`](./pattern_capture.md). Psync flows typically query the status of existing payment transactions.
-
 ## 🚀 Quick Start Guide
 
 To implement a new connector Psync flow using these patterns:
