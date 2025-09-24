@@ -10,9 +10,9 @@ This directory contains comprehensive implementation patterns for each payment f
 |-------------|-----------|---------|-------------|
 | [`pattern_authorize.md`](./pattern_authorize.md) | **Authorization** | ✅ Complete | Complete authorization flow patterns for any payment connector |
 | [`pattern_capture.md`](./pattern_capture.md) | **Capture** | ✅ Complete | Comprehensive capture flow patterns and implementations |
+| [`pattern_psync.md`](./pattern_psync.md) | **Payment Sync** | ✅ Complete | Payment status synchronization (Psync) flow patterns across 22 connectors |
 | `pattern_void.md` | **Void/Cancel** | 🚧 Planned | Void payment authorization patterns |
 | `pattern_refund.md` | **Refund** | 🚧 Planned | Full and partial refund flow patterns |
-| `pattern_sync.md` | **Payment Sync** | 🚧 Planned | Payment status synchronization patterns |
 | `pattern_refund_sync.md` | **Refund Sync** | 🚧 Planned | Refund status synchronization patterns |
 
 ### Advanced Flows
