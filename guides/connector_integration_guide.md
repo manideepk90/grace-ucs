@@ -44,12 +44,12 @@ Before starting, determine your current implementation state:
 ## 📋 Complete Flow Coverage
 
 ### Core Payment Flows (Priority 1)
-- **Authorize**: Initial payment authorization
+- **Authorize**: Initial payment authorization[See Authorize Pattern Guide](patterns/authorize.md)
 - **Capture**: Capture authorized amounts
 - **Void**: Cancel authorized payments
-- **Refund**: Process refunds (full/partial)
+- **Refund**: Process refunds (full/partial) - [See Refund Pattern Guide](patterns/pattern_refund.md)
 - **PSync**: Payment status synchronization
-- **RSync**: Refund status synchronization
+- **RSync**: Refund status synchronization - [See Refund Pattern Guide](patterns/pattern_refund.md)
 
 ### Advanced Flows (Priority 2)
 - **CreateOrder**: Multi-step payment initiation
@@ -128,7 +128,68 @@ If resuming partial implementation:
 # AI will update existing spec with missing components
 ```
 
-#### Step 1.3: Implementation Planning
+#### Step 1.3: API Documentation Review (CRITICAL)
+
+**⚠️ MANDATORY: Always review actual API documentation before implementing any flow**
+
+Before implementing any connector flow, you MUST:
+
+1. **Locate Official API Documentation**:
+   - Find the connector's OpenAPI specification (openapi.json/swagger.json)
+   - Download or access the most recent API documentation
+   - Verify the API version you're implementing against
+
+2. **Flow-Specific Schema Validation**:
+   ```bash
+   # For each flow you're implementing, verify:
+   # - Request schema (required/optional fields)
+   # - Response schema (actual fields returned)
+   # - Error response formats
+   # - Status codes and their meanings
+   ```
+
+3. **Critical Validation Points**:
+   - **Request Body Requirements**: Some flows require empty bodies (common for full refunds)
+   - **Response Field Differences**: Refund responses often differ from payment responses
+   - **Status Value Mappings**: Actual status strings vs documentation examples
+   - **URL Patterns**: Verify endpoint patterns for each flow type
+   - **HTTP Methods**: Confirm GET/POST/PUT requirements per flow
+
+4. **Common API Documentation Pitfalls**:
+   - ❌ **Don't assume consistency**: Payment and refund APIs often have different schemas
+   - ❌ **Don't copy-paste structures**: Each flow may have unique response fields
+   - ❌ **Don't trust examples only**: Verify actual field requirements
+   - ✅ **Do cross-reference**: Compare docs with actual API responses when possible
+   - ✅ **Do check for flow-specific sections**: Many connectors have separate docs per flow
+
+5. **Implementation Validation**:
+   ```rust
+   // Before coding, answer these questions:
+   // 1. What fields are actually returned in the response?
+   // 2. Are there flow-specific status values?
+   // 3. Does this flow require a different base URL pattern?
+   // 4. Are there flow-specific authentication requirements?
+   ```
+
+**Example from Worldpay Refund Implementation:**
+```rust
+// WRONG: Assumed refund response matches payment response
+pub struct RefundResponse {
+    pub outcome: String,
+    pub transaction_reference: String, // ❌ This field doesn't exist in refund responses!
+    pub links: Links,
+}
+
+// CORRECT: Based on actual openapi.json specification
+pub struct RefundResponse {
+    pub outcome: String,               // ✅ Only field actually returned
+    pub links: Links,                  // ✅ Standard links object
+}
+```
+
+**AI Implementation Note**: When implementing flows, always start with: "Let me first review the [ConnectorName] OpenAPI specification for the [FlowName] endpoints to ensure accurate implementation."
+
+#### Step 1.4: Implementation Planning
 ```bash
 # AI will create detailed plan based on:
 # - Current implementation state
@@ -353,6 +414,112 @@ mod tests {
 // File: backend/grpc-server/tests/connector_name_test.rs
 // Comprehensive gRPC integration tests
 ```
+
+### Refund Flow Testing Guidelines
+
+#### Essential Refund Test Cases
+```rust
+#[cfg(test)]
+mod refund_flow_tests {
+    use super::*;
+
+    #[test]
+    fn test_refund_request_empty_body_serialization() {
+        // Test that empty refund requests serialize to {} correctly
+        let refund_request = RefundRequest {};
+        let serialized = serde_json::to_string(&refund_request).unwrap();
+        assert_eq!(serialized, "{}");
+    }
+
+    #[test]
+    fn test_refund_response_without_transaction_reference() {
+        // Critical: Test that response doesn't expect non-existent fields
+        let json_response = r#"{"outcome":"sentForRefund","_links":{"self":{"href":"https://api.connector.com/payments/123"}}}"#;
+        let response: RefundResponse = serde_json::from_str(json_response).unwrap();
+        assert_eq!(response.outcome, "sentForRefund");
+    }
+
+    #[test]
+    fn test_refund_status_mapping_comprehensive() {
+        // Test all possible refund status mappings
+        assert_eq!(map_refund_status("sentForRefund"), RefundStatus::Pending);
+        assert_eq!(map_refund_status("refunded"), RefundStatus::Success);
+        assert_eq!(map_refund_status("refused"), RefundStatus::Failure);
+        assert_eq!(map_refund_status("failed"), RefundStatus::Failure);
+        assert_eq!(map_refund_status("unknown_status"), RefundStatus::Pending);
+    }
+
+    #[test]
+    fn test_refund_url_construction() {
+        // Test URL building for refunds follows correct pattern
+        let router_data = create_test_refund_router_data();
+        let url = connector.get_refund_url(&router_data).unwrap();
+        assert!(url.contains("/payments/"));
+        assert!(url.ends_with("/refunds"));
+    }
+
+    #[test]
+    fn test_rsync_url_construction() {
+        // Test RSync URL building
+        let router_data = create_test_rsync_router_data();
+        let url = connector.get_rsync_url(&router_data).unwrap();
+        assert!(url.contains("/refunds/"));
+    }
+
+    #[test]
+    fn test_connector_transaction_id_extraction() {
+        // Test ID extraction from various response formats
+        let response_with_href = RefundResponse {
+            outcome: "sentForRefund".to_string(),
+            links: Links {
+                self_link: Href { href: "https://api.com/payments/txn_123".to_string() }
+            }
+        };
+        let extracted_id = extract_transaction_id(&response_with_href.links.self_link.href);
+        assert_eq!(extracted_id, Some("txn_123".to_string()));
+    }
+}
+
+// Integration test with real API flow
+#[tokio::test]
+async fn test_full_refund_integration() {
+    // 1. Create successful payment first
+    let payment_result = create_test_payment().await.expect("Payment should succeed");
+    
+    // 2. Process full refund
+    let refund_request = RefundRequest {
+        connector_transaction_id: payment_result.transaction_id,
+        minor_refund_amount: payment_result.amount,
+        currency: payment_result.currency,
+    };
+    
+    let refund_result = process_refund(refund_request).await.expect("Refund should succeed");
+    assert_eq!(refund_result.refund_status, RefundStatus::Pending);
+    
+    // 3. Check refund status via RSync
+    let sync_result = sync_refund_status(&refund_result.connector_refund_id).await;
+    assert!(sync_result.is_ok());
+}
+```
+
+#### Refund Testing Checklist
+- [ ] **Empty Body Handling**: Verify empty request bodies serialize correctly
+- [ ] **Response Schema Validation**: Test against actual API responses, not assumptions
+- [ ] **Status Mapping Coverage**: Test all possible refund status values
+- [ ] **URL Pattern Verification**: Confirm correct endpoint construction
+- [ ] **ID Extraction**: Test transaction ID extraction from various response formats
+- [ ] **Error Scenario Testing**: Test refund-specific error conditions
+- [ ] **Integration Flow**: Test complete refund flow with real API
+- [ ] **RSync Functionality**: Verify refund status checking works
+- [ ] **Partial vs Full Refunds**: Test both scenarios if supported
+- [ ] **Amount Validation**: Test refund amount limits and validation
+
+#### Common Refund Testing Pitfalls
+1. **Assuming Response Consistency**: Don't test based on payment response structure
+2. **Missing Empty Body Tests**: Many connectors require empty bodies for full refunds
+3. **Incomplete Status Coverage**: Test unknown/unexpected status values
+4. **URL Pattern Assumptions**: Verify actual endpoint patterns with connector docs
+5. **ID Extraction Edge Cases**: Test different response formats for transaction IDs
 
 ## 🔄 Resuming Partial Implementation
 
