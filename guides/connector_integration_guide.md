@@ -44,11 +44,11 @@ Before starting, determine your current implementation state:
 ## 📋 Complete Flow Coverage
 
 ### Core Payment Flows (Priority 1)
-- **Authorize**: Initial payment authorization[See Authorize Pattern Guide](patterns/authorize.md)
+- **Authorize**: Initial payment authorization[See Authorize Pattern Guide](patterns/pattern_authorize.md)
 - **Capture**: Capture authorized amounts
-- **Void**: Cancel authorized payments
+- **Void**: Cancel authorized payments- [See Refund Pattern Guide](patterns/void.md)
 - **Refund**: Process refunds (full/partial) - [See Refund Pattern Guide](patterns/pattern_refund.md)
-- **PSync**: Payment status synchronization
+- **PSync**: Payment status synchronization - - [See Refund Pattern Guide](patterns/Psync.md)
 - **RSync**: Refund status synchronization - [See Refund Pattern Guide](patterns/pattern_refund.md)
 
 ### Advanced Flows (Priority 2)
@@ -119,13 +119,46 @@ If resuming partial implementation:
 # - Code quality issues
 ```
 
-#### Step 1.2: Create/Update Technical Specification
-```bash
-# For new implementation:
-# Use: grace-ucs/connector_integration/template/tech_spec.md
+#### Step 1.2: API Documentation Review (CRITICAL - IMPLEMENTATION BLOCKING)
 
-# For continuing implementation:
-# AI will update existing spec with missing components
+**🚨 MANDATORY: THIS STEP BLOCKS ALL IMPLEMENTATION - CANNOT BE SKIPPED**
+
+**ENFORCEMENT RULE**: No connector flow implementation can proceed without completing this mandatory API documentation review phase.
+
+### **API Documentation Analysis Workflow** (REQUIRED FOR EVERY FLOW):
+
+#### **Phase 1: Documentation Loading** (BLOCKING)
+```bash
+# ALWAYS start any flow implementation with this exact phrase:
+"Let me first review the [ConnectorName] OpenAPI specification/API documentation for [FlowName] endpoints to ensure accurate implementation."
+
+# Required actions:
+1. Load OpenAPI specification (openapi.json/swagger.json) 
+2. Locate official API documentation for the specific flow
+3. Verify API version compatibility
+4. Confirm documentation completeness for target flow
+```
+
+#### **Phase 2: Schema Extraction** (MANDATORY)
+```bash
+# For EACH flow being implemented, extract:
+✅ EXACT request schema (required vs optional fields)
+✅ EXACT response schema (actual fields returned, not examples)
+✅ Error response formats and status codes
+✅ Authentication requirements specific to this flow
+✅ URL pattern and HTTP method requirements
+✅ Any empty body requirements (common in refunds)
+```
+
+#### **Phase 3: Cross-Flow Validation** (CRITICAL)
+```bash
+# Compare this flow against other flows to identify:
+⚠️ Response schema differences (Payment vs Refund vs Capture)
+⚠️ Status value variations between flows
+⚠️ URL pattern differences
+⚠️ HTTP method differences
+⚠️ Authentication differences
+⚠️ Field presence/absence variations
 ```
 
 #### Step 1.3: API Documentation Review (CRITICAL)
@@ -173,17 +206,24 @@ Before implementing any connector flow, you MUST:
 
 **Example from Worldpay Refund Implementation:**
 ```rust
-// WRONG: Assumed refund response matches payment response
+// ❌ WRONG: Assumed refund response matches payment response
 pub struct RefundResponse {
     pub outcome: String,
-    pub transaction_reference: String, // ❌ This field doesn't exist in refund responses!
+    pub transaction_reference: String, // This field doesn't exist in refund responses!
+    pub issuer: Option<Issuer>,        // This field doesn't exist in refund responses!
     pub links: Links,
 }
 
-// CORRECT: Based on actual openapi.json specification
+// ✅ CORRECT: Based on actual openapi.json specification review
 pub struct RefundResponse {
     pub outcome: String,               // ✅ Only field actually returned
     pub links: Links,                  // ✅ Standard links object
+    // No transaction_reference or issuer fields in refund responses
+}
+
+// ✅ CORRECT: Empty refund request body (from API docs)
+pub struct RefundRequest {
+    // Empty - serializes to {} for full refunds
 }
 ```
 
